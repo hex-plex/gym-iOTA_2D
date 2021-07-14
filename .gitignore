@@ -1,1 +1,10 @@
 iota2d/
+
+# Exclude compiled python files
+**/*.pyc
+
+# Exclude cache files
+**/__*__/
+
+# Exclude bundle files
+*.egg-info
