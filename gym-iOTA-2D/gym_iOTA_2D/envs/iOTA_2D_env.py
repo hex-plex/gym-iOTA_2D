@@ -14,7 +14,7 @@ class Iota2DEnv(gym.Env):
     metadata={'render.modes':['human']}
 
     def __init__(self):
-        self.pixels_per_metre = 20
+        self.pixels_per_metre = 30
         self.n =  10
         self.arena = (10,10)
         self.target_pos = (0,5)
@@ -41,8 +41,7 @@ class Iota2DEnv(gym.Env):
         self.screen=None
         self.world = world(gravity=(0,0))
         # TODO : positions
-        self.box = self.world.CreateDynamicBody(position=(0,0))
-        print(dir(self.box))
+        self.box = self.world.CreateDynamicBody(position=(0,0),linearDamping=5,angularDamping=5)
         self.box_fixture = self.box.CreatePolygonFixture(
             box=(self.box_side,self.box_side),
             density=1,

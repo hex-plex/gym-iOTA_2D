@@ -1,13 +1,10 @@
 import gym 
 import gym_iOTA_2D
-
+import numpy as np
 env = gym.make('iOTA_2D-v0')
-print(env.action_space.low)
-print(env.observation_space.high)
-print(env.reset())
+state = env.reset()
+print(float('inf'))
 env.render()
-print(env.step([[0,0] for i in range(10)]))
-for i in range (100000000):
-    pass
-
+# print(env.step([pos+[np.random.uniform(),np.random.uniform()] for pos in state]))
+print(env.step([[0,0] for _ in state]))
 env.close()
