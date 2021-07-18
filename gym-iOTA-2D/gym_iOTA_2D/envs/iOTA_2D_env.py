@@ -16,11 +16,11 @@ class Iota2DEnv(gym.Env):
     def __init__(self):
         self.pixels_per_metre = 20
         self.n =  10
-        self.arena = (10.,10.)
-        self.target_pos = (15,15)
+        self.arena = (10,10)
+        self.target_pos = (0,5)
         self.box_side = 1
-        self.robot_radius=0.2
-        high = np.array([(np.array(self.arena)) for _ in range(self.n)])
+        self.robot_radius=0.3
+        high = np.array([(np.array(self.arena,dtype=np.float64)) for _ in range(self.n)])
 
         self.action_space = spaces.Box(-high,high,
         dtype=np.float64,
@@ -38,14 +38,22 @@ class Iota2DEnv(gym.Env):
         self.screen=None
         self.world = world(gravity=(0,0))
         # TODO : positions
-        self.box = self.world.CreateDynamicBody(position=(15,15))
+        self.box = self.world.CreateDynamicBody(position=(0,0))
         self.box_fixture = self.box.CreatePolygonFixture(
             box=(self.box_side,self.box_side),
             density=1,
             friction=0
             )
-        positions = [(3*(i % 3),3*(i // 3)) for i in range(10)]
-
+        xchoices =[]
+        ychoices = []
+        for i in range (-80,85,5):
+            if np.abs(i)>20:
+                xchoices.append(i/10.)
+                ychoices.append(i/10.)
+        np.random.shuffle(xchoices)
+        np.random.shuffle(ychoices)
+        print(list(zip(xchoices[:self.n],ychoices[:self.n])))
+        positions = list(zip(xchoices[:self.n],ychoices[:self.n]))
         self.robots = [
             self.world.CreateDynamicBody(position=position) for position in positions
         ]
@@ -54,9 +62,7 @@ class Iota2DEnv(gym.Env):
             robot.CreateCircleFixture(radius=self.robot_radius,density=1,friction=0) 
             for robot in self.robots
         ]
-
-        self.screen_height = 480
-        self.screen_width = 680
+        self.screen_width,self.screen_height = 2*np.array(self.arena)*self.pixels_per_metre
         self.fps = 60
         self.time_step = 1./self.fps
 
@@ -66,14 +72,14 @@ class Iota2DEnv(gym.Env):
         }
 
         def draw_box(polygon, body, fixture):
-            vertices = [(body.transform * v) * self.pixels_per_metre for v in polygon.vertices]
+            vertices = [(body.transform * v + self.arena) * self.pixels_per_metre for v in polygon.vertices]
             vertices = [(v[0], self.screen_height - v[1]) for v in vertices]
             pygame.draw.polygon(self.screen, colors['box'], vertices)
 
         polygonShape.draw = draw_box
 
         def draw_robot(circle, body, fixture):
-            position = body.transform * circle.pos * self.pixels_per_metre
+            position = (body.transform * circle.pos + self.arena) * self.pixels_per_metre
             position = (position[0], self.screen_height - position[1])
             pygame.draw.circle(self.screen, colors['robot'], [int(
             x) for x in position], int(circle.radius * self.pixels_per_metre))
@@ -85,9 +91,8 @@ class Iota2DEnv(gym.Env):
     def step(self,action):
         err_msg = "%r (%s) invalid" % (action,type(action))
         assert self.action_space.contains(action), err_msg
-        
         # TODO implement step
-
+       
         self.world.Step(self.time_step,10,10) 
         observation = np.array([np.array(robot.position) for robot in self.robots])
         dx,dy = self.box.position - self.target_pos
