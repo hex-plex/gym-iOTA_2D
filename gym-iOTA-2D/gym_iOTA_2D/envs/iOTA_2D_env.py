@@ -7,7 +7,7 @@ import pygame
 from pygame.locals import(QUIT,KEYDOWN,K_ESCAPE)
 
 import Box2D
-from Box2D.b2 import (world,polygonShape,circleShape,staticBody,dynamicBody)
+from Box2D.b2 import (world,polygonShape,circleShape,staticBody,dynamicBody,vec2)
 
 
 class Iota2DEnv(gym.Env):
@@ -20,6 +20,9 @@ class Iota2DEnv(gym.Env):
         self.target_pos = (0,5)
         self.box_side = 1
         self.robot_radius=0.3
+        self.max_velocity = 1.
+        self.max_force = 1.
+        self.epsilon = 0.01
         high = np.array([(np.array(self.arena,dtype=np.float64)) for _ in range(self.n)])
 
         self.action_space = spaces.Box(-high,high,
@@ -39,6 +42,7 @@ class Iota2DEnv(gym.Env):
         self.world = world(gravity=(0,0))
         # TODO : positions
         self.box = self.world.CreateDynamicBody(position=(0,0))
+        print(dir(self.box))
         self.box_fixture = self.box.CreatePolygonFixture(
             box=(self.box_side,self.box_side),
             density=1,
@@ -91,8 +95,23 @@ class Iota2DEnv(gym.Env):
     def step(self,action):
         err_msg = "%r (%s) invalid" % (action,type(action))
         assert self.action_space.contains(action), err_msg
-        # TODO implement step
-       
+        # TODO implement step 
+        finished = False
+        while not finished:
+            finished =True
+            for robot,destination in zip(self.robots,action):
+                delta = vec2(destination) - robot.position
+                if delta.length <= self.epsilon:
+                    robot.linearVelocity = (0,0)
+                    continue
+                finished = False
+                direction = delta/delta.length
+                vel_mag = robot.linearVelocity.length * direction.dot(robot.linearVelocity)
+                force_mag = self.max_force*(1 - vel_mag/self.max_velocity)
+                robot.ApplyForce(force = force_mag*direction,point=robot.position,wake=True)
+
+            self.world.Step(self.time_step,10,10)
+            self.render() 
         self.world.Step(self.time_step,10,10) 
         observation = np.array([np.array(robot.position) for robot in self.robots])
         dx,dy = self.box.position - self.target_pos
