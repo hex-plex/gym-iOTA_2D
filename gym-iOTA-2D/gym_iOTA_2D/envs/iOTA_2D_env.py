@@ -15,7 +15,7 @@ class Iota2DEnv(gym.Env):
 
     def __init__(self):
         self.pixels_per_metre = 30
-        self.n =  10
+        self.no_of_modules=self.n =  10
         self.arena = (10,10)
         self.target_pos = (0,5)
         self.box_side = 1
