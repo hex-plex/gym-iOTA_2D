@@ -121,17 +121,18 @@ class Iota2DEnv(gym.Env):
             density=1,
             friction=0
             )
+        self.min_separation = 2*self.robot_radius + self.epsilon
         self.box_friction = self.box.mass*self.gravity*self.bfc
-        xchoices =[]
-        ychoices = []
-        for i in range (-80,85,5):
-            if np.abs(i)>20:
-                xchoices.append(i/20.)
-                ychoices.append(i/20.)
-        np.random.shuffle(xchoices)
-        np.random.shuffle(ychoices)
-        print(list(zip(xchoices[:self.n],ychoices[:self.n])))
-        positions = list(zip(xchoices[:self.n],ychoices[:self.n]))
+        
+        positions =[]
+        while len(positions) != self.n:
+            pot_pos = vec2((
+                np.random.uniform(low=-self.arena[0],high=self.arena[0]),
+                np.random.uniform(low=-self.arena[1],high=self.arena[1])
+                ))
+            if all((pot_pos - position).length>=self.min_separation for position in positions):
+                positions.append(pot_pos)
+
         self.robots = [
             self.world.CreateDynamicBody(position=position) for position in positions
         ]
