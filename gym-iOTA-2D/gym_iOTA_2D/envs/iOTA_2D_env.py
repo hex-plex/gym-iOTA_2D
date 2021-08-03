@@ -14,12 +14,12 @@ class Iota2DEnv(gym.Env):
     metadata={'render.modes':['human']}
 
     def __init__(self):
-        self.pixels_per_metre = 30
+        self.pixels_per_metre = 60
         self.no_of_modules=self.n =  10
-        self.arena = (10,10)
-        self.target_pos = (0,5)
-        self.box_side = 1
-        self.robot_radius=0.3
+        self.arena = (5,5)
+        self.target_pos = (0,2.5)
+        self.box_side = 0.5
+        self.robot_radius=0.05
         self.max_velocity = 2.
         self.max_force = 2.
         self.epsilon = 0.01
@@ -72,7 +72,7 @@ class Iota2DEnv(gym.Env):
         err_msg = "%r (%s) invalid" % (action,type(action))
         assert self.action_space.contains(action), err_msg 
         finished = False
-        step=0
+        steps=0
         while not finished:
             finished =True
 
@@ -96,9 +96,12 @@ class Iota2DEnv(gym.Env):
                     wake=True)        
 
             self.world.Step(self.time_step,10,10)
-            if step%self.step_fps_ratio == 0:
+            if steps%self.step_fps_ratio == 0:
                 self.render() 
-            step = (step+1)%self.step_fps_ratio
+            steps = (steps+1)
+            if steps*self.time_step > 30:
+                raise RuntimeError("environment timestep exceeded 30 seconds")
+
         self.world.Step(self.time_step,10,10)
         self.world.ClearForces()
         observation = np.array([np.array(robot.position) for robot in self.robots])
@@ -121,8 +124,8 @@ class Iota2DEnv(gym.Env):
         ychoices = []
         for i in range (-80,85,5):
             if np.abs(i)>20:
-                xchoices.append(i/10.)
-                ychoices.append(i/10.)
+                xchoices.append(i/20.)
+                ychoices.append(i/20.)
         np.random.shuffle(xchoices)
         np.random.shuffle(ychoices)
         print(list(zip(xchoices[:self.n],ychoices[:self.n])))
