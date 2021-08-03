@@ -14,7 +14,7 @@ class Iota2DEnv(gym.Env):
     metadata={'render.modes':['human']}
 
     def __init__(self,no_of_modules=10, arena=(5,5),pixels_per_metre=60,
-    box_side=0.5,robot_radius=0.05,max_velocity=2.,max_force=2.,epsilon=None,
+    box_side=0.5,robot_radius=0.1,max_velocity=2.,max_force=2.,epsilon=None,
     step_fps_ratio=10,robot_friction_coefficient=0.3,box_friction_coefficient=0.3,
     gravity=10,target_pos=None):
         self.ppm = pixels_per_metre
