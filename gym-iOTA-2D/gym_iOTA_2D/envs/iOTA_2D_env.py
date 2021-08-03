@@ -13,21 +13,24 @@ from Box2D.b2 import (world,polygonShape,circleShape,staticBody,dynamicBody,vec2
 class Iota2DEnv(gym.Env):
     metadata={'render.modes':['human']}
 
-    def __init__(self):
-        self.pixels_per_metre = 60
-        self.no_of_modules=self.n =  10
-        self.arena = (5,5)
-        self.target_pos = (0,2.5)
-        self.box_side = 0.5
-        self.robot_radius=0.05
-        self.max_velocity = 2.
-        self.max_force = 2.
-        self.epsilon = 0.01
-        self.step_fps_ratio = 10
-        
-        self.robot_friction_coefficient = 0.3
-        self.box_friction_coefficient = 0.3
-        self.gravity = 10
+    def __init__(self,no_of_modules=10, arena=(5,5),pixels_per_metre=60,
+    box_side=0.5,robot_radius=0.05,max_velocity=2.,max_force=2.,epsilon=None,
+    step_fps_ratio=10,robot_friction_coefficient=0.3,box_friction_coefficient=0.3,
+    gravity=10,target_pos=None):
+        self.ppm = pixels_per_metre
+        self.n =  no_of_modules
+        self.arena = arena
+        self.target_pos = target_pos if target_pos is not None else (-arena[0],0)
+        self.box_side = box_side
+        self.robot_radius=robot_radius
+        self.max_velocity = max_velocity
+        self.max_force = max_force
+        self.epsilon = epsilon if epsilon is not None else 0.1 * robot_radius
+        self.sfr = step_fps_ratio
+        self.rfc = robot_friction_coefficient
+        self.bfc = box_friction_coefficient
+        self.gravity = gravity
+        self.fps = 60
         high = np.array([(np.array(self.arena,dtype=np.float64)) for _ in range(self.n)])
 
         self.action_space = spaces.Box(-high,high,
@@ -42,9 +45,8 @@ class Iota2DEnv(gym.Env):
             shape=(self.n,2)    #sanity check
         )
 
-        self.screen_width,self.screen_height = 2*np.array(self.arena)*self.pixels_per_metre
-        self.fps = 60
-        self.time_step = 1./(self.fps*self.step_fps_ratio)
+        self.screen_width,self.screen_height = 2*np.array(self.arena)*self.ppm
+        self.time_step = 1./(self.fps*self.sfr)
 
         colors = {
             'box': (255,255,255,255),
@@ -52,17 +54,17 @@ class Iota2DEnv(gym.Env):
         }
 
         def draw_box(polygon, body, fixture):
-            vertices = [(body.transform * v + self.arena) * self.pixels_per_metre for v in polygon.vertices]
+            vertices = [(body.transform * v + self.arena) * self.ppm for v in polygon.vertices]
             vertices = [(v[0], self.screen_height - v[1]) for v in vertices]
             pygame.draw.polygon(self.screen, colors['box'], vertices)
 
         polygonShape.draw = draw_box
 
         def draw_robot(circle, body, fixture):
-            position = (body.transform * circle.pos + self.arena) * self.pixels_per_metre
+            position = (body.transform * circle.pos + self.arena) * self.ppm
             position = (position[0], self.screen_height - position[1])
             pygame.draw.circle(self.screen, colors['robot'], [int(
-            x) for x in position], int(circle.radius * self.pixels_per_metre))
+            x) for x in position], int(circle.radius * self.ppm))
 
         circleShape.draw = draw_robot
 
@@ -96,7 +98,7 @@ class Iota2DEnv(gym.Env):
                     wake=True)        
 
             self.world.Step(self.time_step,10,10)
-            if steps%self.step_fps_ratio == 0:
+            if steps%self.sfr == 0:
                 self.render() 
             steps = (steps+1)
             if steps*self.time_step > 30:
@@ -119,7 +121,7 @@ class Iota2DEnv(gym.Env):
             density=1,
             friction=0
             )
-        self.box_friction = self.box.mass*self.gravity*self.box_friction_coefficient
+        self.box_friction = self.box.mass*self.gravity*self.bfc
         xchoices =[]
         ychoices = []
         for i in range (-80,85,5):
@@ -139,7 +141,7 @@ class Iota2DEnv(gym.Env):
             for robot in self.robots
         ]
 
-        self.robot_friction = self.robots[0].mass*self.gravity*self.robot_friction_coefficient
+        self.robot_friction = self.robots[0].mass*self.gravity*self.rfc
 
         print(np.array(self.robots[0].position))
         print('reset-works')
