@@ -11,6 +11,75 @@ from Box2D.b2 import (world,polygonShape,circleShape,staticBody,dynamicBody,vec2
 
 
 class Iota2DEnv(gym.Env):
+    '''
+    A 2D gym version of the gym-iOTA environment
+
+    ...
+    This is a gym environment that is the 2D version of the gym-iOTA
+    environment (https://github.com/Robotics-Club-IIT-BHU/gym-iOTA).
+
+    The environment consists of indepedently controllable circular 
+    robots that work together to move a square box to a target position.
+
+    Attributes
+    -----------
+    n : int
+        the number of robots (modules) in the environment,
+        default value is 10
+    ppm : int
+        pixels per metre, determines the resolution of output
+        screen
+    arena : tuple (x:int, y:int)
+        determines the size of a quadrant of the arena, 
+        i.e, x and y are half of the environment width and height
+        respectively.
+    target_pos : tuple (x:float, y:float)
+        the position to which the box must be moved
+    box_side : float
+        the length of the side of the square box
+    robot_radius : float
+        the radius of each individual robot
+    max_velocity : float
+        the maximum velocity the robot can attain
+    max_force : float
+        the maximum force that can be exerted on the robot
+        to move it.
+    epsilon : float
+        tolerance in distance measurement, points within epsilon
+        distance of a body's (robot or box) center is treated as coinciding
+        with the center for the purposes of step and target completion.
+    sfr : int
+        step fps ration, number of world.Steps to be executed before a frame
+        is to be rendered.
+    rfc : float
+        robot friction coefficient, coefficient of friction between the robot
+        and the environment 'floor'.
+    bfc : float
+        box friction coefficient, coefficient of friction between the box
+        and the environment 'floor'.
+    gravity : int or float
+        the gravity experienced by the bodies into the screen
+        (along negative z axis of right hand coordinate system)
+    fps : int
+        the frame(s) per second to be rendered. default value is 60
+        it is recommended to leave this unchanged.
+    
+    METHODS
+    -------
+    step(action):
+        Moves the robots to the positions in actions and
+        returns the new observation, reward and completion status 
+        as a tuple
+    reset():
+        (re-)initialize the environment,
+        returns the initial observation
+    render():
+        render a frame of the current environment. 
+        Note: step() will automatically call render()
+        if render() was called atleast once on the object before.
+    close():
+        terminates the environment and rendered screen
+    '''
     metadata={'render.modes':['human']}
 
     def __init__(self,no_of_modules=10, arena=(5,5),pixels_per_metre=60,
