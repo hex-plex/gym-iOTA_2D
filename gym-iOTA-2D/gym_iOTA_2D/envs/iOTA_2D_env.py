@@ -139,7 +139,6 @@ class Iota2DEnv(gym.Env):
 
         circleShape.draw = draw_robot
 
-        print('__init__-works')
 
     def step(self,action):
         err_msg = "%r (%s) invalid" % (action,type(action))
@@ -215,8 +214,6 @@ class Iota2DEnv(gym.Env):
 
         self.robot_friction = self.robots[0].mass*self.gravity*self.rfc
 
-        print(np.array(self.robots[0].position))
-        print('reset-works')
         return np.array([np.array(robot.position) for robot in self.robots])
 
     def render(self, mode='human',close=False):
