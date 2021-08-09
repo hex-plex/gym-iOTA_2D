@@ -21,6 +21,8 @@ class Iota2DEnv(gym.Env):
     The environment consists of indepedently controllable circular 
     robots that work together to move a square box to a target position.
 
+    Note: env.reset() must be run to initialize the environment
+
     Attributes
     -----------
     n : int
@@ -69,7 +71,7 @@ class Iota2DEnv(gym.Env):
     step(action):
         Moves the robots to the positions in actions and
         returns the new observation, reward and completion status 
-        as a tuple
+        as a tuple.
     reset():
         (re-)initialize the environment,
         returns the initial observation
@@ -199,7 +201,7 @@ class Iota2DEnv(gym.Env):
                 np.random.uniform(low=-self.arena[0],high=self.arena[0]),
                 np.random.uniform(low=-self.arena[1],high=self.arena[1])
                 ))
-            if all((pot_pos - position).length>=self.min_separation for position in positions):
+            if (pot_pos.length>self.box_side/(2**0.5)+self.robot_radius + self.epsilon) and all((pot_pos - position).length>=self.min_separation for position in positions):
                 positions.append(pot_pos)
 
         self.robots = [
